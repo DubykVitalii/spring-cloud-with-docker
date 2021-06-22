@@ -2,10 +2,7 @@ package com.intentsg.service.ticket.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import com.intentsg.model.Ticket;
 
 import java.util.ArrayList;
@@ -31,5 +28,26 @@ public class TestController {
 	public ResponseEntity<Ticket> addTicket(@RequestBody Ticket ticket) {
 		ticketList.add(ticket);
 		return ResponseEntity.ok(ticket);
+	}
+	@PutMapping("/update")
+	public ResponseEntity<?> updateTicket(@RequestBody Ticket ticket) {
+		for (Ticket t : ticketList) {
+			if (t.getId().equals(ticket.getId())) {
+				t.setPlace(ticket.getPlace());
+				return ResponseEntity.ok().build();
+			}
+		}
+		return ResponseEntity.notFound().build();
+	}
+
+	@DeleteMapping("/delete/{id}")
+	public ResponseEntity<?> deleteTicket(@PathVariable String id) {
+		for (Ticket t : ticketList) {
+			if (t.getId().equals(id)) {
+				ticketList.remove(t);
+				return ResponseEntity.ok().build();
+			}
+		}
+		return ResponseEntity.notFound().build();
 	}
 }

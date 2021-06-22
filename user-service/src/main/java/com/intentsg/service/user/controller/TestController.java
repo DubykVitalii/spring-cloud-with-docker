@@ -11,11 +11,14 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Controller
@@ -35,29 +38,47 @@ public class TestController {
 		String forObject = restTemplate.getForObject(serviceInstance.getUri().toString() + "/api/tickets/test", String.class);
 		System.out.println(forObject);
 		return ResponseEntity.ok("user-service - " + forObject);
-
 	}
 
-	@GetMapping("/ticket")
-	public ResponseEntity<Ticket> addTicket() {
-		Ticket ticket = new Ticket();
-		ticket.setId("123");
-		ticket.setPlace(111);
-
+	@GetMapping(value = "/ticket/create", params = {"id", "place"})
+	public ResponseEntity<?> addTicket(@RequestParam String id, @RequestParam int place) {
 		ServiceInstance serviceInstance = getServiceInstances();
+		HttpEntity<Ticket> requestEntity = getHttpEntity(id, place);
+		restTemplate.postForObject(
+				serviceInstance.getUri().toString() + "/api/tickets/ticket", requestEntity, Ticket.class
+		);
+		return ResponseEntity.ok().build();
+	}
 
+	@GetMapping(value = "/ticket/update", params = {"id", "place"})
+	public ResponseEntity<?> updateTicket(@RequestParam String id, @RequestParam int place) {
+		ServiceInstance serviceInstance = getServiceInstances();
+		HttpEntity<Ticket> requestEntity = getHttpEntity(id, place);
+		restTemplate.put(serviceInstance.getUri().toString() + "/api/tickets/update", requestEntity, Ticket.class);
+		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/ticket/delete/{id}")
+	public ResponseEntity<?> deleteTicket(@PathVariable String id) {
+		Map<String, String> params = new HashMap<String, String>() {{
+			put("id", id);
+		}};
+		ServiceInstance serviceInstance = getServiceInstances();
+		restTemplate.delete(serviceInstance.getUri().toString() + "/api/tickets/delete/{id}", params);
+		return ResponseEntity.ok().build();
+	}
+
+	private HttpEntity<Ticket> getHttpEntity(String id, int place) {
+		Ticket ticket = new Ticket();
+		ticket.setId(id);
+		ticket.setPlace(place);
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-
-		JSONObject ticketJson = new JSONObject(ticket);
-
-		HttpEntity<String> request =
-				new HttpEntity<>(ticketJson.toString(), headers);
-
-		return restTemplate.postForEntity(serviceInstance.getUri().toString() + "/api/tickets/ticket", request, Ticket.class);
+		return new HttpEntity<>(ticket, headers);
 	}
 
 	private ServiceInstance getServiceInstances() {
+
 		return discoveryClient.getInstances("edge-service").get(0);
 	}
 }
