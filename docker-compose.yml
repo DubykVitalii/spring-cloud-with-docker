@@ -1,0 +1,33 @@
+version: '3'
+services:
+  discovery-service:
+    container_name: discovery-service
+    build:
+      ./discovery-service
+    ports:
+      - 8761:8761
+    networks:
+      - webnet
+  edge-service:
+    build:
+      ./edge-service
+    ports:
+        - 8765:8765
+    networks:
+        - webnet
+  ticket-service:
+    build:
+      ./ticket-service
+    ports:
+        - 8084:8084
+    networks:
+        - webnet
+  user-service:
+    build:
+      ./user-service
+    ports:
+        - 8089:8089
+    networks:
+        - webnet
+networks:
+  webnet:
